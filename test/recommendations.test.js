@@ -65,3 +65,20 @@ test('card copy never uses the AI label', () => {
   const s = JSON.stringify(cards);
   assert.equal(s.match(/\bAI\b/), null);
 });
+
+test('chart baseline label matches its comparison', () => {
+  for (const c of cards) {
+    assert.equal(c.evidence.chart.labels[0], 'This segment');
+    assert.ok(c.evidence.baselineLabel);
+    assert.equal(c.evidence.chart.labels[1], c.evidence.baselineLabel);
+  }
+  const everyone = cards.filter((c) => c.evidence.chart.labels[1] === 'Everyone');
+  assert.deepEqual(everyone.map((c) => c.id), ['kids_families']);
+});
+
+test('evidence is a real contrast, not implied by the filters', () => {
+  const l = cards.find((c) => c.id === 'lapsed_single_merch').evidence;
+  assert.notEqual(l.segmentValue, '100%');
+  assert.notEqual(l.segmentValue, l.baselineValue);
+  assert.match(cards.find((c) => c.id === 'premium_curious').evidence.segmentValue, /^\d+(st|nd|rd|th) percentile$/);
+});
