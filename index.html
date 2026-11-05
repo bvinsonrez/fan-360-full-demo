@@ -245,7 +245,7 @@ const GROUP_TYPES = ['Corporate', 'Youth sports', 'Church', 'School', 'Nonprofit
 // rates are fractions; aov is average order value in dollars.
 const CHANNELS = [
   { id: 'email', label: 'Email', consentKey: 'email',
-    rates: { delivered: 0.96, opened: 0.38, clicked: 0.06, purchased: 0.03 }, aov: 84 },
+    rates: { delivered: 0.95, opened: 0.38, clicked: 0.06, purchased: 0.03 }, aov: 84 },
   { id: 'sms', label: 'SMS', consentKey: 'sms',
     rates: { delivered: 0.97, opened: 0.68, clicked: 0.12, purchased: 0.04 }, aov: 72,
     note: 'Requires documented consent, not just a preference flag.' },
@@ -284,7 +284,7 @@ module.exports = {
 // Collects every string the UI shows for metrics, so tests can scan them.
 const { CHANNELS, SCALE } = require('./config');
 const { scaled, fmtCount, fmtMoney, fmtChartValue } = require('./format');
-const { applyFilters, consentWaterfall, projectResults, projectionDisplay } = require('./segments');
+const { applyFilters, consentWaterfall, projectResults, projectionDisplay, assumptionText, combineProjections } = require('./segments');
 const { fanProfileView, ROLES } = require('./views-profile');
 
 const CHANNEL_IDS = CHANNELS.map((c) => c.id);
@@ -328,6 +328,7 @@ function collectDisplayedStrings(model) {
   out.push(...Object.values(f.takeaways));
 
   for (const id of CHANNEL_IDS) addWaterfall(out, consentWaterfall(fans, id));
+  for (const ch of CHANNELS) out.push(assumptionText(ch));
 
   for (const card of recommendations) {
     out.push(
@@ -344,6 +345,10 @@ function collectDisplayedStrings(model) {
       const disp = projectionDisplay(projectResults(w.eligible, [id]));
       for (const c of disp.perChannel) { out.push(c.label); for (const r of c.rows) out.push(r.label, r.value); }
       for (const r of disp.combined) out.push(r.label, r.value);
+    }
+    for (const ids of [CHANNEL_IDS, ['email', 'sms']]) {
+      const results = ids.map((id) => projectResults(consentWaterfall(audience, id).eligible, [id]));
+      for (const r of combineProjections(results)) out.push(r.label, r.value);
     }
   }
 
@@ -1963,7 +1968,7 @@ module.exports = { mulberry32, pick, intBetween };
 "segments.js": function (module, exports, require) {
 // Tab 6: segment filters, consent waterfall, channel projections and builder state.
 const { CHANNELS, SCALE } = require('./config');
-const { roundParts, scaled, fmtCount, fmtMoney } = require('./format');
+const { roundParts, scaled, fmtCount, fmtMoney, fmtPct } = require('./format');
 
 const DEFAULT_FILTERS = {
   plan2026: [], seasonsActiveMin: 0, games2026Min: null, games2026Max: null,
@@ -2090,6 +2095,25 @@ function projectionDisplay(results) {
   return { perChannel, combined };
 }
 
+// Stated assumptions for a channel, as shown under its projections on tab 6.
+function assumptionText(ch) {
+  const pct = (r) => fmtPct(r, Math.abs(r * 100 - Math.round(r * 100)) > 1e-9 ? 1 : 0);
+  const rates = Object.keys(ch.rates).map((k) => `${STEP_ROW_LABELS[k]} ${pct(ch.rates[k])}`).join(', ');
+  return `Assumptions, share of eligible fans: ${rates}, average order ${fmtMoney(ch.aov)}.`;
+}
+
+// Combined purchases and revenue across single-channel projectResults outputs, as display rows.
+function combineProjections(results) {
+  const per = results.map((r) => r.perChannel[0]);
+  return projectionDisplay({
+    perChannel: per,
+    combined: {
+      purchases: per.reduce((a, c) => a + c.metrics.purchased, 0),
+      revenue: per.reduce((a, c) => a + c.revenue, 0),
+    },
+  }).combined;
+}
+
 function createSegmentState() {
   return { filters: { ...DEFAULT_FILTERS, plan2026: [], regions: [] }, channelIds: ['email'], fromRecommendation: null };
 }
@@ -2110,6 +2134,7 @@ function setFilter(state, key, value) {
 module.exports = {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
   createSegmentState, applyRecommendation, setFilter, STEP_ROW_LABELS,
+  assumptionText, combineProjections,
 };
 
 },
@@ -2824,10 +2849,10 @@ module.exports = { renderRecs };
 // Tab 6: Segment Builder. Filters on the left; live count, consent waterfall and projections on the right.
 // Every figure is rendered from the shared formatters and the segments.js display strings, never re-scaled here.
 const { CHANNELS, PLANS, REGIONS } = require('../config');
-const { scaled, fmtCount, fmtPct, fmtMoney } = require('../format');
+const { scaled, fmtCount } = require('../format');
 const {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
-  createSegmentState, setFilter, STEP_ROW_LABELS,
+  createSegmentState, setFilter, assumptionText, combineProjections,
 } = require('../segments');
 const { EMPTY_TEXT } = require('./charts');
 
@@ -2896,12 +2921,6 @@ function describeFilters(f) {
   if (f.kidsClubHousehold) out.push('Kids Club household (parents only)');
   if (f.regions.length) out.push(`Region: ${f.regions.join(', ')}`);
   return out;
-}
-
-function assumptionText(ch) {
-  const pct = (r) => fmtPct(r, Math.abs(r * 100 - Math.round(r * 100)) > 1e-9 ? 1 : 0);
-  const rates = Object.keys(ch.rates).map((k) => `${STEP_ROW_LABELS[k]} ${pct(ch.rates[k])}`).join(', ');
-  return `Assumptions, share of eligible fans: ${rates}, average order ${fmtMoney(ch.aov)}.`;
 }
 
 // Runs one channel through consent and projection; strings come straight from segments.js.
@@ -3157,14 +3176,7 @@ function renderSegments(container, ctx) {
     resultsPanel.appendChild(cols);
 
     if (results.length > 1) {
-      const per = results.map((r) => r.proj.perChannel[0]);
-      const combined = projectionDisplay({
-        perChannel: per,
-        combined: {
-          purchases: per.reduce((a, c) => a + c.metrics.purchased, 0),
-          revenue: per.reduce((a, c) => a + c.revenue, 0),
-        },
-      }).combined;
+      const combined = combineProjections(results.map((r) => r.proj));
       const box = node('section', 'chart-card seg-combined');
       box.appendChild(node('h3', 'chart-title', 'All selected channels'));
       for (const row of combined) {

@@ -100,7 +100,7 @@ test('filters express rules exactly', () => {
 test('projections use stated rates', () => {
   const r = projectResults(1000, ['email', 'social']);
   const e = r.perChannel[0];
-  assert.deepEqual(e.metrics, { delivered: 960, opened: 380, clicked: 60, purchased: 30 });
+  assert.deepEqual(e.metrics, { delivered: 950, opened: 380, clicked: 60, purchased: 30 });
   assert.equal(e.revenue, 30 * 84);
   assert.deepEqual(r.perChannel[1].metrics, { matched: 620, clicked: 13, purchased: 6 });
   assert.equal(r.combined.purchases, 36);
@@ -114,5 +114,5 @@ test('projectionDisplay formats scaled strings and handles zero audience', () =>
   for (const c of z.perChannel) for (const r of c.rows) assert.ok(!/NaN|Infinity|-0/.test(r.value));
   const d = projectionDisplay(projectResults(1000, ['email']));
   assert.equal(d.perChannel[0].rows[0].label, 'Delivered');
-  assert.equal(d.perChannel[0].rows[0].value, '24.0K');
+  assert.equal(d.perChannel[0].rows[0].value, '23.8K');
 });

@@ -41,7 +41,7 @@ const GROUP_TYPES = ['Corporate', 'Youth sports', 'Church', 'School', 'Nonprofit
 // rates are fractions; aov is average order value in dollars.
 const CHANNELS = [
   { id: 'email', label: 'Email', consentKey: 'email',
-    rates: { delivered: 0.96, opened: 0.38, clicked: 0.06, purchased: 0.03 }, aov: 84 },
+    rates: { delivered: 0.95, opened: 0.38, clicked: 0.06, purchased: 0.03 }, aov: 84 },
   { id: 'sms', label: 'SMS', consentKey: 'sms',
     rates: { delivered: 0.97, opened: 0.68, clicked: 0.12, purchased: 0.04 }, aov: 72,
     note: 'Requires documented consent, not just a preference flag.' },

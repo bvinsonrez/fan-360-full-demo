@@ -1,10 +1,10 @@
 // Tab 6: Segment Builder. Filters on the left; live count, consent waterfall and projections on the right.
 // Every figure is rendered from the shared formatters and the segments.js display strings, never re-scaled here.
 const { CHANNELS, PLANS, REGIONS } = require('../config');
-const { scaled, fmtCount, fmtPct, fmtMoney } = require('../format');
+const { scaled, fmtCount } = require('../format');
 const {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
-  createSegmentState, setFilter, STEP_ROW_LABELS,
+  createSegmentState, setFilter, assumptionText, combineProjections,
 } = require('../segments');
 const { EMPTY_TEXT } = require('./charts');
 
@@ -73,12 +73,6 @@ function describeFilters(f) {
   if (f.kidsClubHousehold) out.push('Kids Club household (parents only)');
   if (f.regions.length) out.push(`Region: ${f.regions.join(', ')}`);
   return out;
-}
-
-function assumptionText(ch) {
-  const pct = (r) => fmtPct(r, Math.abs(r * 100 - Math.round(r * 100)) > 1e-9 ? 1 : 0);
-  const rates = Object.keys(ch.rates).map((k) => `${STEP_ROW_LABELS[k]} ${pct(ch.rates[k])}`).join(', ');
-  return `Assumptions, share of eligible fans: ${rates}, average order ${fmtMoney(ch.aov)}.`;
 }
 
 // Runs one channel through consent and projection; strings come straight from segments.js.
@@ -334,14 +328,7 @@ function renderSegments(container, ctx) {
     resultsPanel.appendChild(cols);
 
     if (results.length > 1) {
-      const per = results.map((r) => r.proj.perChannel[0]);
-      const combined = projectionDisplay({
-        perChannel: per,
-        combined: {
-          purchases: per.reduce((a, c) => a + c.metrics.purchased, 0),
-          revenue: per.reduce((a, c) => a + c.revenue, 0),
-        },
-      }).combined;
+      const combined = combineProjections(results.map((r) => r.proj));
       const box = node('section', 'chart-card seg-combined');
       box.appendChild(node('h3', 'chart-title', 'All selected channels'));
       for (const row of combined) {

@@ -1,7 +1,7 @@
 // Collects every string the UI shows for metrics, so tests can scan them.
 const { CHANNELS, SCALE } = require('./config');
 const { scaled, fmtCount, fmtMoney, fmtChartValue } = require('./format');
-const { applyFilters, consentWaterfall, projectResults, projectionDisplay } = require('./segments');
+const { applyFilters, consentWaterfall, projectResults, projectionDisplay, assumptionText, combineProjections } = require('./segments');
 const { fanProfileView, ROLES } = require('./views-profile');
 
 const CHANNEL_IDS = CHANNELS.map((c) => c.id);
@@ -45,6 +45,7 @@ function collectDisplayedStrings(model) {
   out.push(...Object.values(f.takeaways));
 
   for (const id of CHANNEL_IDS) addWaterfall(out, consentWaterfall(fans, id));
+  for (const ch of CHANNELS) out.push(assumptionText(ch));
 
   for (const card of recommendations) {
     out.push(
@@ -61,6 +62,10 @@ function collectDisplayedStrings(model) {
       const disp = projectionDisplay(projectResults(w.eligible, [id]));
       for (const c of disp.perChannel) { out.push(c.label); for (const r of c.rows) out.push(r.label, r.value); }
       for (const r of disp.combined) out.push(r.label, r.value);
+    }
+    for (const ids of [CHANNEL_IDS, ['email', 'sms']]) {
+      const results = ids.map((id) => projectResults(consentWaterfall(audience, id).eligible, [id]));
+      for (const r of combineProjections(results)) out.push(r.label, r.value);
     }
   }
 

@@ -1,6 +1,6 @@
 // Tab 6: segment filters, consent waterfall, channel projections and builder state.
 const { CHANNELS, SCALE } = require('./config');
-const { roundParts, scaled, fmtCount, fmtMoney } = require('./format');
+const { roundParts, scaled, fmtCount, fmtMoney, fmtPct } = require('./format');
 
 const DEFAULT_FILTERS = {
   plan2026: [], seasonsActiveMin: 0, games2026Min: null, games2026Max: null,
@@ -127,6 +127,25 @@ function projectionDisplay(results) {
   return { perChannel, combined };
 }
 
+// Stated assumptions for a channel, as shown under its projections on tab 6.
+function assumptionText(ch) {
+  const pct = (r) => fmtPct(r, Math.abs(r * 100 - Math.round(r * 100)) > 1e-9 ? 1 : 0);
+  const rates = Object.keys(ch.rates).map((k) => `${STEP_ROW_LABELS[k]} ${pct(ch.rates[k])}`).join(', ');
+  return `Assumptions, share of eligible fans: ${rates}, average order ${fmtMoney(ch.aov)}.`;
+}
+
+// Combined purchases and revenue across single-channel projectResults outputs, as display rows.
+function combineProjections(results) {
+  const per = results.map((r) => r.perChannel[0]);
+  return projectionDisplay({
+    perChannel: per,
+    combined: {
+      purchases: per.reduce((a, c) => a + c.metrics.purchased, 0),
+      revenue: per.reduce((a, c) => a + c.revenue, 0),
+    },
+  }).combined;
+}
+
 function createSegmentState() {
   return { filters: { ...DEFAULT_FILTERS, plan2026: [], regions: [] }, channelIds: ['email'], fromRecommendation: null };
 }
@@ -147,4 +166,5 @@ function setFilter(state, key, value) {
 module.exports = {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
   createSegmentState, applyRecommendation, setFilter, STEP_ROW_LABELS,
+  assumptionText, combineProjections,
 };
