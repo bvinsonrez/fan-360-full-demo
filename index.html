@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
 <meta name="robots" content="noindex, nofollow">
 <title>Fan 360 Demo</title>
 <style>
@@ -626,7 +627,7 @@ const TUNE = {
   identRate: 0.4, // share of an app user's in-park transactions that carry identity
   secondEmail: { ticketing: 0.2, ticketing_dup: 0.85, fnb: 0.55, groups: 0.6, groups_attendee: 0.15, experiences: 0.2, kidsClub: 0.1 },
   dupAccount: 0.38, // per active season, non-plan buyers checking out on a new account
-  nameMess: 0.05, oldPhone: 0.05, missingPhone: 0.1,
+  nameMess: 0.055, oldPhone: 0.05, missingPhone: 0.1,
   groupBookings: { 2024: 290, 2025: 280, 2026: 268 },
   experiences: { 2024: 110, 2025: 115, 2026: 120 },
   // Experience buyer mix by archetype (order: member, premium_curious, family, single, triple_play, pass).
@@ -666,12 +667,12 @@ const NICK = {
   Robert: 'Bob', William: 'Bill', Katherine: 'Kate', James: 'Jim', Michael: 'Mike', Elizabeth: 'Liz',
   Thomas: 'Tom', Jennifer: 'Jen',
 };
-const PERSONAL_DOMAINS = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'comcast.net',
-  'icloud.com', 'msn.com', 'q.com', 'aol.com'];
+const PERSONAL_DOMAINS = ['example.com', 'example.net', 'example.org', 'mail.example.com', 'mail.example.net',
+  'inbox.example.org', 'home.example.com', 'web.example.net', 'post.example.org'];
 const PERSONAL_CUM = [38, 50, 60, 68, 76, 85, 89, 93, 96];
-const WORK_DOMAINS = ['northstarmfg.com', 'lakeshorehealth.org', 'prairiebankmn.com', 'gophermedical.org',
-  'riverbendlaw.com', 'tenthousandlakes.co', 'minnehahasupply.com', 'cedarcreekschools.org',
-  'loonlogistics.com', 'arrowheadins.com', 'bluffcountry.coop', 'mississippimill.com'];
+const WORK_DOMAINS = ['northstarmfg.example', 'lakeshorehealth.example', 'prairiebankmn.example', 'gophermedical.example',
+  'riverbendlaw.example', 'tenthousandlakes.example', 'minnehahasupply.example', 'cedarcreekschools.example',
+  'loonlogistics.example', 'arrowheadins.example', 'bluffcountry.example', 'mississippimill.example'];
 
 const ZIP_RANGES = {
   Minnesota: [[55101, 55130, 3], [55301, 55350, 2], [55369, 55379, 2], [55401, 55447, 3], [55001, 55025, 1],
@@ -690,13 +691,13 @@ const AREA_CODES = {
 
 const HEROES = {
   H1: { first: 'Erik', last: 'Lindgren', zip: '55420', archetype: 'pass', gender: 'm',
-    emails: ['erik.lindgren@gmail.com', 'elindgren.mn@outlook.com'], phones: ['952-555-0148'] },
+    emails: ['erik.lindgren@example.com', 'elindgren.mn@example.net'], phones: ['952-555-0148'] },
   H2: { first: 'Katherine', last: 'Halvorsen', zip: '55125', archetype: 'member', gender: 'f',
-    emails: ['khalvorsen@comcast.net', 'katherine.halvorsen@arrowheadins.com'], phones: ['651-555-0183', '651-555-0129'] },
+    emails: ['khalvorsen@example.org', 'katherine.halvorsen@arrowheadins.example'], phones: ['651-555-0183', '651-555-0129'] },
   H3: { first: 'Dale', last: 'Brekke', zip: '56001', archetype: 'group_only', gender: 'm',
-    emails: ['dalebrekke@gmail.com', 'dbrekke@valleylutheranmankato.org'], phones: ['507-555-0162', '507-555-0110'] },
+    emails: ['dalebrekke@example.com', 'dbrekke@valleylutheranmankato.example'], phones: ['507-555-0162', '507-555-0110'] },
   H4: { first: 'Jennifer', last: 'Solberg', zip: '55304', archetype: 'family', gender: 'f',
-    emails: ['jen.solberg@icloud.com'], phones: ['763-555-0137'] },
+    emails: ['jen.solberg@mail.example.com'], phones: ['763-555-0137'] },
 };
 const HERO_SLOTS = { H1: 2311, H2: 6107, H3: 11893, H4: 16457 };
 
@@ -808,8 +809,10 @@ function makePeople(rand, size) {
 
   function makePhone(region) {
     for (;;) {
-      const p = `${AREA_CODES[region][Math.floor(rand() * AREA_CODES[region].length)]}-${intBetween(rand, 201, 989)}-${pad(intBetween(rand, 0, 9999), 4)}`;
-      if (!usedPhones.has(p) && !p.includes('-555-')) { usedPhones.add(p); return p; }
+      const area = AREA_CODES[region][Math.floor(rand() * AREA_CODES[region].length)];
+      intBetween(rand, 201, 989); // keeps the random stream aligned with earlier output
+      const p = `${area}-555-${pad(intBetween(rand, 0, 9999), 4)}`;
+      if (!usedPhones.has(p)) { usedPhones.add(p); return p; }
     }
   }
   function makeEmail(first, last, work) {
@@ -1053,16 +1056,16 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
   const heroIdx = {};
   people.forEach((p, i) => { if (p.heroId) heroIdx[p.heroId] = i; });
   const forced = new Map([
-    [`${heroIdx.H1}|ticketing`, { name: 'Erik Lindgren', email: 'erik.lindgren@gmail.com', phone: '952-555-0148', zip: '55420' }],
-    [`${heroIdx.H1}|fnb`, { name: 'Erik Lindgren', email: 'elindgren.mn@outlook.com', phone: '9525550148', zip: '55420' }],
-    [`${heroIdx.H2}|ticketing`, { name: 'Katherine Halvorsen', email: 'khalvorsen@comcast.net', phone: '651-555-0183', zip: '55125' }],
-    [`${heroIdx.H2}|fnb`, { name: 'Kate Halvorsen', email: 'khalvorsen@comcast.net', phone: '6515550129', zip: '55125' }],
-    [`${heroIdx.H3}|groups`, { name: 'Dale Brekke', email: 'dbrekke@valleylutheranmankato.org', phone: '(507) 555-0162', zip: '56001' }],
-    [`${heroIdx.H3}|groups_attendee`, { name: 'Dale Brekke', email: 'dalebrekke@gmail.com', phone: null, zip: '56001' }],
-    [`${heroIdx.H3}|fnb`, { name: 'Dale Brekke', email: 'dalebrekke@gmail.com', phone: '5075550162', zip: '56001' }],
-    [`${heroIdx.H4}|ticketing`, { name: 'Jennifer Solberg', email: 'jen.solberg@icloud.com', phone: '763-555-0137', zip: '55304' }],
-    [`${heroIdx.H4}|kidsClub`, { name: 'Jen Solberg', email: 'jen.solberg@icloud.com', phone: null, zip: '55304' }],
-    [`${heroIdx.H4}|fnb`, { name: 'Jennifer Solburg', email: 'jen.solberg@icloud.com', phone: '7635550137', zip: '55304' }],
+    [`${heroIdx.H1}|ticketing`, { name: 'Erik Lindgren', email: 'erik.lindgren@example.com', phone: '952-555-0148', zip: '55420' }],
+    [`${heroIdx.H1}|fnb`, { name: 'Erik Lindgren', email: 'elindgren.mn@example.net', phone: '9525550148', zip: '55420' }],
+    [`${heroIdx.H2}|ticketing`, { name: 'Katherine Halvorsen', email: 'khalvorsen@example.org', phone: '651-555-0183', zip: '55125' }],
+    [`${heroIdx.H2}|fnb`, { name: 'Kate Halvorsen', email: 'khalvorsen@example.org', phone: '6515550129', zip: '55125' }],
+    [`${heroIdx.H3}|groups`, { name: 'Dale Brekke', email: 'dbrekke@valleylutheranmankato.example', phone: '(507) 555-0162', zip: '56001' }],
+    [`${heroIdx.H3}|groups_attendee`, { name: 'Dale Brekke', email: 'dalebrekke@example.com', phone: null, zip: '56001' }],
+    [`${heroIdx.H3}|fnb`, { name: 'Dale Brekke', email: 'dalebrekke@example.com', phone: '5075550162', zip: '56001' }],
+    [`${heroIdx.H4}|ticketing`, { name: 'Jennifer Solberg', email: 'jen.solberg@mail.example.com', phone: '763-555-0137', zip: '55304' }],
+    [`${heroIdx.H4}|kidsClub`, { name: 'Jen Solberg', email: 'jen.solberg@mail.example.com', phone: null, zip: '55304' }],
+    [`${heroIdx.H4}|fnb`, { name: 'Jennifer Solburg', email: 'jen.solberg@mail.example.com', phone: '7635550137', zip: '55304' }],
   ]);
   const contact = (i, source, key = source) => (people[i].heroId && forced.get(`${i}|${key}`)) || variant(i, source, key);
   const flags = (i) => ({ isMinor: people[i].isMinor, heroId: people[i].heroId });
@@ -2436,6 +2439,11 @@ module.exports = { renderFan360 };
 const { searchFans, fanProfileView, ROLES } = require('../views-profile');
 const { SEASONS } = require('../config');
 
+const SOURCE_NAMES = {
+  ticketing: 'Ticketing & Entry', fnb: 'F&B & Retail', groups: 'Groups & Experiences',
+  experiences: 'Groups & Experiences', surveys: 'Survey', kidsClub: 'Twins Kids Club',
+};
+
 function node(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -2501,7 +2509,7 @@ function renderProfileBody(el, view) {
     if (g.name === 'Linkage') {
       for (const s of view.sources) {
         const row = node('div', 'pf-row');
-        row.appendChild(node('span', 'pf-label', `Linked record (${s.source})`));
+        row.appendChild(node('span', 'pf-label', `Linked record (${SOURCE_NAMES[s.source] || s.source})`));
         row.appendChild(node('span', 'pf-value', `${s.id}, ${s.confidence} confidence`));
         sec.appendChild(row);
       }
@@ -2574,6 +2582,7 @@ function renderProfile(container, ctx) {
   }
   function paintResults() {
     results.textContent = '';
+    if (!search.value.trim()) return;
     const found = searchFans(model.fans, search.value);
     if (!found.length) { results.appendChild(node('div', 'pf-none', 'No fans match that search')); return; }
     for (const f of found) {

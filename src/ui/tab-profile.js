@@ -3,6 +3,11 @@
 const { searchFans, fanProfileView, ROLES } = require('../views-profile');
 const { SEASONS } = require('../config');
 
+const SOURCE_NAMES = {
+  ticketing: 'Ticketing & Entry', fnb: 'F&B & Retail', groups: 'Groups & Experiences',
+  experiences: 'Groups & Experiences', surveys: 'Survey', kidsClub: 'Twins Kids Club',
+};
+
 function node(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -68,7 +73,7 @@ function renderProfileBody(el, view) {
     if (g.name === 'Linkage') {
       for (const s of view.sources) {
         const row = node('div', 'pf-row');
-        row.appendChild(node('span', 'pf-label', `Linked record (${s.source})`));
+        row.appendChild(node('span', 'pf-label', `Linked record (${SOURCE_NAMES[s.source] || s.source})`));
         row.appendChild(node('span', 'pf-value', `${s.id}, ${s.confidence} confidence`));
         sec.appendChild(row);
       }
@@ -141,6 +146,7 @@ function renderProfile(container, ctx) {
   }
   function paintResults() {
     results.textContent = '';
+    if (!search.value.trim()) return;
     const found = searchFans(model.fans, search.value);
     if (!found.length) { results.appendChild(node('div', 'pf-none', 'No fans match that search')); return; }
     for (const f of found) {

@@ -56,3 +56,24 @@ test('H2 own scans use one seat area', () => {
   assert.ok(own.length > 0);
   assert.deepEqual([...new Set(own.map((s) => s.seatArea))], ['Main Level']);
 });
+
+test('synthetic contacts: reserved email domains and 555 phones only', () => {
+  const emails = [];
+  const phones = [];
+  const add = (r) => { if (r && r.email) emails.push(r.email); if (r && r.phone) phones.push(r.phone); };
+  for (const t of W.ticketing) add(t);
+  for (const f of W.fnbIdentified) add(f);
+  for (const g of W.groups) { add(g.organizer); for (const k of g.knownAttendees) add(k); }
+  for (const e of W.experiences) add(e.buyer);
+  for (const k of W.kidsClub) add(k.parent);
+  for (const s of W.surveys) add(s);
+  for (const c of W.consent) (c.channel === 'sms' ? phones : emails).push(c.contact);
+  for (const d of W.dnc) (d.includes('@') ? emails : phones).push(d);
+  for (const p of W.people) { emails.push(...p.emails); phones.push(...p.phones); }
+  assert.ok(emails.length > 1000 && phones.length > 1000);
+  const reserved = /@([a-z0-9.-]+\.)?example\.(com|net|org)$|\.example$/i;
+  const badE = emails.filter((e) => !reserved.test(e));
+  assert.deepEqual(badE.slice(0, 5), []);
+  const badP = phones.filter((p) => !/^\d{3}555\d{4}$/.test(p.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '')));
+  assert.deepEqual(badP.slice(0, 5), []);
+});
