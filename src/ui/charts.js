@@ -5,7 +5,7 @@ const { fmtChartValue } = require('../format');
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 const LABEL_PX = 12;
 // Non-highlighted series cycle: navy and one neutral, then tints of the same two.
-const CYCLE = [PALETTE.navy, PALETTE.grey, '#4F6F9A', PALETTE.greyLight, '#8CA0BA', PALETTE.slate];
+const CYCLE = [PALETTE.navy, PALETTE.grey, '#4F6F9A', PALETTE.greyLight, '#8CA0BA', PALETTE.slate, '#B8C4D2'];
 const EMPTY_TEXT = 'No fans match these filters';
 
 const live = new Map();

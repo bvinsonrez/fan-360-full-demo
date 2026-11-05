@@ -95,8 +95,9 @@ const EVIDENCE = {
   },
   kids_families(seg, all) {
     const tp = (f) => f.plans[2026] === 'triple_play';
-    const s = share(seg, tp), b = share(all, tp);
-    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all fans)', baselineLabel: 'Everyone', unit: 'pct', s, b, fmt: (v) => fmtPct(v) };
+    const buyers = all.filter((f) => f.plans[2026] === 'single' || f.plans[2026] === 'triple_play');
+    const s = share(seg, tp), b = share(buyers, tp);
+    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all 2026 single-game and Triple Play buyers)', baselineLabel: 'All 2026 single-game and Triple Play buyers', unit: 'pct', s, b, fmt: (v) => fmtPct(v) };
   },
   premium_curious(seg, all) {
     const spenders = all.filter((f) => f.fnbPercentile2026 !== null);
@@ -121,6 +122,7 @@ function computeRecommendations(fans) {
       },
       whyNow: r.whyNow, heroId: r.heroId,
       sponsorAudience: r.sponsor ? r.sponsor.label : null,
+      sponsorAudienceSize: r.sponsor ? `${r.sponsor.label}: ${fmtCount(scaled(seg.length))} fans` : null,
       expanded: false,
     };
   });

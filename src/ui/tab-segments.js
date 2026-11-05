@@ -352,6 +352,7 @@ function renderSegments(container, ctx) {
   saveRow.appendChild(nameInput);
   saveRow.appendChild(saveBtn);
 
+  main.appendChild(node('p', 'sys-intro', 'Build an audience from linked attributes. Consent and minors rules apply before anything is sent.'));
   const top = node('div', 'seg-top');
   top.appendChild(node('h2', 'seg-title', 'Segment Builder'));
   top.appendChild(countBox);

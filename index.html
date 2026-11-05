@@ -347,7 +347,7 @@ function collectDisplayedStrings(model) {
       card.evidence.label, card.evidence.baselineLabel, card.evidence.segmentValue, card.evidence.baselineValue,
     );
     addEvidenceChart(out, card.evidence.chart, card.evidence.chart.unit);
-    if (card.sponsorAudience) out.push(card.sponsorAudience);
+    if (card.sponsorAudience) out.push(card.sponsorAudience, card.sponsorAudienceSize);
     const audience = applyFilters(fans, card.filters);
     for (const id of CHANNEL_IDS) {
       const w = consentWaterfall(audience, id);
@@ -1903,8 +1903,9 @@ const EVIDENCE = {
   },
   kids_families(seg, all) {
     const tp = (f) => f.plans[2026] === 'triple_play';
-    const s = share(seg, tp), b = share(all, tp);
-    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all fans)', baselineLabel: 'Everyone', unit: 'pct', s, b, fmt: (v) => fmtPct(v) };
+    const buyers = all.filter((f) => f.plans[2026] === 'single' || f.plans[2026] === 'triple_play');
+    const s = share(seg, tp), b = share(buyers, tp);
+    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all 2026 single-game and Triple Play buyers)', baselineLabel: 'All 2026 single-game and Triple Play buyers', unit: 'pct', s, b, fmt: (v) => fmtPct(v) };
   },
   premium_curious(seg, all) {
     const spenders = all.filter((f) => f.fnbPercentile2026 !== null);
@@ -1929,6 +1930,7 @@ function computeRecommendations(fans) {
       },
       whyNow: r.whyNow, heroId: r.heroId,
       sponsorAudience: r.sponsor ? r.sponsor.label : null,
+      sponsorAudienceSize: r.sponsor ? `${r.sponsor.label}: ${fmtCount(scaled(seg.length))} fans` : null,
       expanded: false,
     };
   });
@@ -2156,7 +2158,7 @@ const { fmtChartValue } = require('../format');
 const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 const LABEL_PX = 12;
 // Non-highlighted series cycle: navy and one neutral, then tints of the same two.
-const CYCLE = [PALETTE.navy, PALETTE.grey, '#4F6F9A', PALETTE.greyLight, '#8CA0BA', PALETTE.slate];
+const CYCLE = [PALETTE.navy, PALETTE.grey, '#4F6F9A', PALETTE.greyLight, '#8CA0BA', PALETTE.slate, '#B8C4D2'];
 const EMPTY_TEXT = 'No fans match these filters';
 
 const live = new Map();
@@ -2508,6 +2510,7 @@ function renderParts(card, spec, totalCaption) {
 
 function renderFan360(container, view) {
   container.textContent = '';
+  container.appendChild(node('p', 'sys-intro', 'Link the records from all three systems and the same fans show up once, with their full value.'));
   const kpis = node('div', 'kpis kpis-hero');
   container.appendChild(kpis);
   renderKpis(kpis, view.kpis);
@@ -2660,6 +2663,7 @@ function renderProfile(container, ctx) {
   }
 
   container.textContent = '';
+  container.appendChild(node('p', 'sys-intro', 'One linked fan across three seasons and three systems. Switch roles to see what each team is allowed to see.'));
   const bar = node('div', 'pf-bar');
   const chips = node('div', 'chips');
   const search = node('input', 'pf-search');
@@ -2675,9 +2679,8 @@ function renderProfile(container, ctx) {
   function paintChips() {
     chips.textContent = '';
     for (const h of heroes) {
-      const b = node('button', 'chip-btn', h.heroId);
+      const b = node('button', 'chip-btn', h.name);
       b.type = 'button';
-      b.title = h.name;
       b.setAttribute('aria-pressed', String(h.fanId === state.selectedFanId));
       b.addEventListener('click', () => onPick(h.fanId));
       chips.appendChild(b);
@@ -2699,7 +2702,7 @@ function renderProfile(container, ctx) {
     const found = searchFans(model.fans, search.value);
     if (!found.length) { results.appendChild(node('div', 'pf-none', 'No fans match that search')); return; }
     for (const f of found) {
-      const b = node('button', 'result-btn', f.heroId ? `${f.name} (${f.heroId})` : f.name);
+      const b = node('button', 'result-btn', f.name);
       b.type = 'button';
       b.setAttribute('aria-pressed', String(f.fanId === state.selectedFanId));
       b.addEventListener('click', () => onPick(f.fanId));
@@ -2828,7 +2831,7 @@ function renderRecs(container, ctx) {
         why.appendChild(node('strong', 'rec-why-label', 'Why now: '));
         why.appendChild(node('span', 'rec-why-text', card.whyNow));
         body.appendChild(why);
-        if (card.sponsorAudience) body.appendChild(node('p', 'rec-sponsor', card.sponsorAudience));
+        if (card.sponsorAudience) body.appendChild(node('p', 'rec-sponsor', card.sponsorAudienceSize));
         el.appendChild(body);
       }
 
@@ -3210,6 +3213,7 @@ function renderSegments(container, ctx) {
   saveRow.appendChild(nameInput);
   saveRow.appendChild(saveBtn);
 
+  main.appendChild(node('p', 'sys-intro', 'Build an audience from linked attributes. Consent and minors rules apply before anything is sent.'));
   const top = node('div', 'seg-top');
   top.appendChild(node('h2', 'seg-title', 'Segment Builder'));
   top.appendChild(countBox);
@@ -3365,7 +3369,7 @@ function fan360View(world, linkage, fans) {
 
   const takeaways = {
     funnel: `${funnel.totalLabel} source records resolve to ${funnel.labels[0]} fans once duplicates across systems are merged.`,
-    matchBreakdown: `Most links rest on an exact email or phone match; ${matchBreakdown.labels[2]} name + ZIP lookalikes are shown for review, not merged.`,
+    matchBreakdown: `Most links rest on an exact email or phone match; ${matchBreakdown.labels[2]} weaker lookalikes are shown for review, not merged.`,
     overlap: `${fmtPct(m.multiSystemShare)} of fans show up in more than one system, and no single system sees them whole.`,
     valueBySystems: `Fans in 2+ systems are worth ${fmtMultiple(m.valueMultiple)} a single-system fan each year (${fmtMoney(m.meanValue.multi)} vs. ${fmtMoney(m.meanValue.single)}).`,
   };
@@ -3478,7 +3482,7 @@ function fanProfileView(fan, role, world) {
     fields.push(field('Ticketing', `${yr} plan`, PLANS[fan.plans[yr]]));
   }
   fields.push(
-    field('Ticketing', '2026 games attended', fan.games[2026]),
+    field('Ticketing', '2026 games attended (incl. group outings)', fan.games[2026]),
     field('Ticketing', '2026 tickets transferred', fan.transfersSent[2026]),
     field('F&B', '2026 F&B spend', fmtMoney(Math.round(fan.fnbSpend[2026]))),
     field('Engagement', 'Group outings', fan.groupOutings),

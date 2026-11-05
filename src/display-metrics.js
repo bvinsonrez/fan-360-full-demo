@@ -64,7 +64,7 @@ function collectDisplayedStrings(model) {
       card.evidence.label, card.evidence.baselineLabel, card.evidence.segmentValue, card.evidence.baselineValue,
     );
     addEvidenceChart(out, card.evidence.chart, card.evidence.chart.unit);
-    if (card.sponsorAudience) out.push(card.sponsorAudience);
+    if (card.sponsorAudience) out.push(card.sponsorAudience, card.sponsorAudienceSize);
     const audience = applyFilters(fans, card.filters);
     for (const id of CHANNEL_IDS) {
       const w = consentWaterfall(audience, id);

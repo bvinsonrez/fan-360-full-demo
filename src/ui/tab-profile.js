@@ -111,6 +111,7 @@ function renderProfile(container, ctx) {
   }
 
   container.textContent = '';
+  container.appendChild(node('p', 'sys-intro', 'One linked fan across three seasons and three systems. Switch roles to see what each team is allowed to see.'));
   const bar = node('div', 'pf-bar');
   const chips = node('div', 'chips');
   const search = node('input', 'pf-search');
@@ -126,9 +127,8 @@ function renderProfile(container, ctx) {
   function paintChips() {
     chips.textContent = '';
     for (const h of heroes) {
-      const b = node('button', 'chip-btn', h.heroId);
+      const b = node('button', 'chip-btn', h.name);
       b.type = 'button';
-      b.title = h.name;
       b.setAttribute('aria-pressed', String(h.fanId === state.selectedFanId));
       b.addEventListener('click', () => onPick(h.fanId));
       chips.appendChild(b);
@@ -150,7 +150,7 @@ function renderProfile(container, ctx) {
     const found = searchFans(model.fans, search.value);
     if (!found.length) { results.appendChild(node('div', 'pf-none', 'No fans match that search')); return; }
     for (const f of found) {
-      const b = node('button', 'result-btn', f.heroId ? `${f.name} (${f.heroId})` : f.name);
+      const b = node('button', 'result-btn', f.name);
       b.type = 'button';
       b.setAttribute('aria-pressed', String(f.fanId === state.selectedFanId));
       b.addEventListener('click', () => onPick(f.fanId));

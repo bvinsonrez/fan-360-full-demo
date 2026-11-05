@@ -37,6 +37,7 @@ function renderParts(card, spec, totalCaption) {
 
 function renderFan360(container, view) {
   container.textContent = '';
+  container.appendChild(node('p', 'sys-intro', 'Link the records from all three systems and the same fans show up once, with their full value.'));
   const kpis = node('div', 'kpis kpis-hero');
   container.appendChild(kpis);
   renderKpis(kpis, view.kpis);

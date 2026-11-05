@@ -97,7 +97,7 @@ function fan360View(world, linkage, fans) {
 
   const takeaways = {
     funnel: `${funnel.totalLabel} source records resolve to ${funnel.labels[0]} fans once duplicates across systems are merged.`,
-    matchBreakdown: `Most links rest on an exact email or phone match; ${matchBreakdown.labels[2]} name + ZIP lookalikes are shown for review, not merged.`,
+    matchBreakdown: `Most links rest on an exact email or phone match; ${matchBreakdown.labels[2]} weaker lookalikes are shown for review, not merged.`,
     overlap: `${fmtPct(m.multiSystemShare)} of fans show up in more than one system, and no single system sees them whole.`,
     valueBySystems: `Fans in 2+ systems are worth ${fmtMultiple(m.valueMultiple)} a single-system fan each year (${fmtMoney(m.meanValue.multi)} vs. ${fmtMoney(m.meanValue.single)}).`,
   };

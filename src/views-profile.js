@@ -99,7 +99,7 @@ function fanProfileView(fan, role, world) {
     fields.push(field('Ticketing', `${yr} plan`, PLANS[fan.plans[yr]]));
   }
   fields.push(
-    field('Ticketing', '2026 games attended', fan.games[2026]),
+    field('Ticketing', '2026 games attended (incl. group outings)', fan.games[2026]),
     field('Ticketing', '2026 tickets transferred', fan.transfersSent[2026]),
     field('F&B', '2026 F&B spend', fmtMoney(Math.round(fan.fnbSpend[2026]))),
     field('Engagement', 'Group outings', fan.groupOutings),

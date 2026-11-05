@@ -97,7 +97,7 @@ function renderRecs(container, ctx) {
         why.appendChild(node('strong', 'rec-why-label', 'Why now: '));
         why.appendChild(node('span', 'rec-why-text', card.whyNow));
         body.appendChild(why);
-        if (card.sponsorAudience) body.appendChild(node('p', 'rec-sponsor', card.sponsorAudience));
+        if (card.sponsorAudience) body.appendChild(node('p', 'rec-sponsor', card.sponsorAudienceSize));
         el.appendChild(body);
       }
 

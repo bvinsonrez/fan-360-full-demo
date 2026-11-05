@@ -72,8 +72,8 @@ test('chart baseline label matches its comparison', () => {
     assert.ok(c.evidence.baselineLabel);
     assert.equal(c.evidence.chart.labels[1], c.evidence.baselineLabel);
   }
-  const everyone = cards.filter((c) => c.evidence.chart.labels[1] === 'Everyone');
-  assert.deepEqual(everyone.map((c) => c.id), ['kids_families']);
+  assert.equal(cards.filter((c) => c.evidence.chart.labels[1] === 'Everyone').length, 0);
+  assert.equal(cards.find((c) => c.id === 'kids_families').evidence.baselineLabel, 'All 2026 single-game and Triple Play buyers');
 });
 
 test('evidence is a real contrast, not implied by the filters', () => {
