@@ -171,7 +171,7 @@ function buildFans(world, linkage) {
       attendanceChangePct: g[2025] > 0 ? Math.round(((g[2026] - g[2025]) / g[2025]) * 100) : null,
       transfersSent: bySeason(xfer, i), fnbSpend: bySeason(fnb, i), fnbPercentile2026: null,
       retailOrApp: bySeason(retail, i, (v) => v === 1),
-      groupOutings: outings[i],
+      seasonsActive: activeN, groupOutings: outings[i],
       ownTicketEver: SEASONS.some((yr) => plans[yr] !== 'none'),
       singleGameBefore2026: plans[2024] === 'single' || plans[2025] === 'single',
       premium: { own: premOwn[i], viaTransfer: premXfer[i], viaGroup: premGroup[i] },
