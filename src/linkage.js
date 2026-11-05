@@ -10,6 +10,15 @@
 //   surveys      id = respId                      -> world.surveys[]
 //   kidsClub     id = kcId of the first row for a distinct parent name+email+phone
 // Anonymous F&B and Kids Club children are not nodes. Each node also carries isMinor and heroId.
+//
+// Match stats are all in node-PAIR units. For a group of k nodes sharing an email (or phone) we count
+// the k-1 spanning pairs (first node to each other node), not all k(k-1)/2 pairs. A phone pair whose
+// two nodes also share an email is attributed to email only.
+//   byMethod.email / .phone = spanning pairs by key; byMethod.fuzzy = fuzzy pairs that merged clusters
+//   byConfidence.high = email + phone, medium = fuzzy, low = lowCandidates pairs (= lowUnmerged)
+//   candidateMatches = high + medium + low
+// lowCandidates: same last name + zip, not merged, first names plausibly the same person
+// (same first initial or Jaro-Winkler >= 0.80) but failing the merge test.
 
 const NICKNAMES = {
   bob: 'robert', bill: 'william', kate: 'katherine', jim: 'james', mike: 'michael',
@@ -109,15 +118,12 @@ function resolveIdentities(world) {
     while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
     return x;
   };
-  let candidateMatches = 0;
   const byMethod = { email: 0, phone: 0, fuzzy: 0 };
   const mergeEdges = []; // [a, b, method]
   function link(a, b, method) {
-    candidateMatches++;
     const ra = find(a), rb = find(b);
     if (ra === rb) return;
     parent[rb] = ra;
-    byMethod[method]++;
     mergeEdges.push([a, b, method]);
   }
 
@@ -127,7 +133,12 @@ function resolveIdentities(world) {
     for (let i = 0; i < n; i++) {
       const v = nodes[i][field];
       if (!v) continue;
-      if (first.has(v)) link(first.get(v), i, method);
+      if (first.has(v)) {
+        const f = first.get(v);
+        const dupOfEmail = method === 'phone' && nodes[f].email && nodes[f].email === nodes[i].email;
+        if (!dupOfEmail) byMethod[method]++;
+        link(f, i, method);
+      }
       else first.set(v, i);
     }
   }
@@ -152,7 +163,7 @@ function resolveIdentities(world) {
       for (let b = a + 1; b < list.length; b++) {
         const x = nodes[list[a]], y = nodes[list[b]];
         if (find(list[a]) === find(list[b])) continue;
-        if (x.cf === y.cf || jaroWinkler(x.first, y.first) >= 0.92) link(list[a], list[b], 'fuzzy');
+        if (x.cf === y.cf || jaroWinkler(x.first, y.first) >= 0.92) { byMethod.fuzzy++; link(list[a], list[b], 'fuzzy'); }
       }
     }
   }
@@ -160,7 +171,9 @@ function resolveIdentities(world) {
   for (const list of lastZip.values()) {
     for (let a = 0; a < list.length; a++) {
       for (let b = a + 1; b < list.length; b++) {
-        if (find(list[a]) !== find(list[b])) lowPairs.push([list[a], list[b]]);
+        if (find(list[a]) === find(list[b])) continue;
+        const x = nodes[list[a]], y = nodes[list[b]];
+        if (x.first[0] === y.first[0] || x.cf[0] === y.cf[0] || jaroWinkler(x.first, y.first) >= 0.8) lowPairs.push([list[a], list[b]]);
       }
     }
   }
@@ -205,8 +218,8 @@ function resolveIdentities(world) {
     clusterIdx.get(find(a)).lowCandidates.push({ nodeA: ref(a), nodeB: ref(b) });
   }
 
-  const byConfidence = { high: 0, medium: 0, low: lowPairs.length };
-  for (const c of clusters) byConfidence[c.confidence]++;
+  const byConfidence = { high: byMethod.email + byMethod.phone, medium: byMethod.fuzzy, low: lowPairs.length };
+  const candidateMatches = byConfidence.high + byConfidence.medium + byConfidence.low;
   return {
     clusters,
     stats: {

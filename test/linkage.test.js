@@ -93,9 +93,13 @@ test('heroes each resolve to one cluster with evidence', () => {
 test('stats are consistent and helpers behave', () => {
   const s = L.stats;
   assert.equal(s.resolvedFans, L.clusters.length);
-  assert.equal(s.byMethod.email + s.byMethod.phone + s.byMethod.fuzzy, L.clusters.reduce((a, c) => a + c.evidence.length, 0));
-  assert.equal(s.byConfidence.high + s.byConfidence.medium, L.clusters.length);
   assert.equal(s.byConfidence.low, s.lowUnmerged);
+  assert.equal(s.candidateMatches, s.byConfidence.high + s.byConfidence.medium + s.byConfidence.low);
+  assert.equal(s.byConfidence.high, s.byMethod.email + s.byMethod.phone);
+  assert.equal(s.byConfidence.medium, s.byMethod.fuzzy);
+  assert.ok(s.byConfidence.low < s.resolvedFans, String(s.byConfidence.low));
+  assert.equal(s.resolvedFans, L.clusters.length);
+  assert.equal(L.clusters.filter((c) => c.confidence === 'medium').length > 0, true);
   assert.ok(s.byMethod.fuzzy > 0 && s.byMethod.email > 0 && s.byMethod.phone > 0);
   assert.equal(soundex('Robert'), soundex('Rupert'));
   assert.equal(soundex('Halvorsen'), soundex('Halvorson'));
