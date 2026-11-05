@@ -1,6 +1,6 @@
 // Tab 6: segment filters, consent waterfall, channel projections and builder state.
 const { CHANNELS, SCALE } = require('./config');
-const { roundParts } = require('./format');
+const { roundParts, scaled, fmtCount, fmtMoney } = require('./format');
 
 const DEFAULT_FILTERS = {
   plan2026: [], seasonsActiveMin: 0, games2026Min: null, games2026Max: null,
@@ -108,6 +108,25 @@ function projectResults(eligible, channelIds) {
   };
 }
 
+const STEP_ROW_LABELS = { delivered: 'Delivered', opened: 'Opened', clicked: 'Clicked', matched: 'Matched', purchased: 'Purchases' };
+
+// Display strings for projectResults output; tab 6 renders exactly these.
+function projectionDisplay(results) {
+  const perChannel = results.perChannel.map((c) => ({
+    channelId: c.channelId,
+    label: c.label,
+    rows: [
+      ...Object.keys(c.metrics).map((k) => ({ label: STEP_ROW_LABELS[k], value: fmtCount(scaled(c.metrics[k])) })),
+      { label: 'Projected revenue', value: fmtMoney(scaled(c.revenue)) },
+    ],
+  }));
+  const combined = [
+    { label: 'Combined purchases', value: fmtCount(scaled(results.combined.purchases)) },
+    { label: 'Combined revenue', value: fmtMoney(scaled(results.combined.revenue)) },
+  ];
+  return { perChannel, combined };
+}
+
 function createSegmentState() {
   return { filters: { ...DEFAULT_FILTERS, plan2026: [], regions: [] }, channelIds: ['email'], fromRecommendation: null };
 }
@@ -126,6 +145,6 @@ function setFilter(state, key, value) {
 }
 
 module.exports = {
-  DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults,
+  DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
   createSegmentState, applyRecommendation, setFilter,
 };

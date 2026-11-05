@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { buildModel } = require('../src/model');
 const { CHANNELS } = require('../src/config');
 const {
-  DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults,
+  DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
   createSegmentState, applyRecommendation, setFilter,
 } = require('../src/segments');
 
@@ -105,4 +105,14 @@ test('projections use stated rates', () => {
   assert.deepEqual(r.perChannel[1].metrics, { matched: 620, clicked: 13, purchased: 6 });
   assert.equal(r.combined.purchases, 36);
   assert.equal(r.combined.revenue, 30 * 84 + 6 * 78);
+});
+
+test('projectionDisplay formats scaled strings and handles zero audience', () => {
+  const z = projectionDisplay(projectResults(0, ['email', 'sms', 'push', 'social']));
+  assert.equal(z.combined[0].value, '0');
+  assert.equal(z.combined[1].value, '$0');
+  for (const c of z.perChannel) for (const r of c.rows) assert.ok(!/NaN|Infinity|-0/.test(r.value));
+  const d = projectionDisplay(projectResults(1000, ['email']));
+  assert.equal(d.perChannel[0].rows[0].label, 'Delivered');
+  assert.equal(d.perChannel[0].rows[0].value, '24.0K');
 });
