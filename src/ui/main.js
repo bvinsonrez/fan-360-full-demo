@@ -1,11 +1,13 @@
 // App shell: header state, tab bar, routing and shared state.
-// Tabs 4–7 register renderers by adding to TABS (see registerTab); until then they show a placeholder.
+// Tab renderers live in TABS (see registerTab); an unregistered tab shows a placeholder.
 const { buildModel } = require('../model');
 const { createSegmentState } = require('../segments');
 const { destroyAllCharts } = require('./charts');
 const { renderSystemTab } = require('./tab-systems');
 const { renderFan360 } = require('./tab-fan360');
 const { renderProfile } = require('./tab-profile');
+const { renderSegments } = require('./tab-segments');
+const { renderRecs } = require('./tab-recs');
 
 const TAB_GROUPS = [
   { label: 'Your systems today', tabs: [
@@ -32,6 +34,8 @@ const TABS = {
   groups: (c, ctx) => renderSystemTab(c, ctx.model.views.groups),
   fan360: (c, ctx) => renderFan360(c, ctx.model.views.fan360),
   profile: (c, ctx) => renderProfile(c, ctx),
+  segments: (c, ctx) => renderSegments(c, ctx),
+  recs: (c, ctx) => renderRecs(c, ctx),
 };
 
 function registerTab(id, renderer) { TABS[id] = renderer; }
