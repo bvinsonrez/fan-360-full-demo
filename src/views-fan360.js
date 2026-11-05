@@ -22,7 +22,10 @@ function fan360Metrics(world, linkage, fans) {
   const fanByEmail = new Map();
   for (const f of fans) for (const e of f.emails) fanByEmail.set(e, f.fanId);
   const fansWithEmail = new Set();
-  for (const e of listEmails) fansWithEmail.add(fanByEmail.get(e));
+  for (const e of listEmails) {
+    const id = fanByEmail.get(e);
+    if (id !== undefined) fansWithEmail.add(id);
+  }
 
   return {
     recordsPerFan: stats.sourceRecords / stats.resolvedFans,
@@ -63,18 +66,19 @@ function fan360View(world, linkage, fans) {
       + (src.has('groups') || src.has('experiences') ? 'G' : '');
   };
   const comboCount = Object.fromEntries(combos.map(([, k]) => [k, 0]));
-  const bySys = { 1: [], 2: [], 3: [] };
-  for (const f of fans) {
-    comboCount[sysKey(f)]++;
-    bySys[f.systems].push(f.annualValue);
-  }
-  const valueData = [1, 2, 3].map((k) => Math.round(mean(bySys[k])));
+  for (const f of fans) comboCount[sysKey(f)]++;
+  // Same split as the value-multiple KPI: single-system vs. 2+ systems.
+  const valueData = [Math.round(m.meanValue.single), Math.round(m.meanValue.multi)];
+  // Tab 2 shows the identified share to one decimal; derive the anonymous share from that
+  // displayed figure so the two always add to 100.0% on screen.
+  const identifiedShown = fmtPct(m.fnbIdentifiedShare, 1);
+  const anonShown = `${(100 - parseFloat(identifiedShown)).toFixed(1)}%`;
 
   const kpis = [
     { id: 'resolvedFans', label: 'Resolved fans', value: fmtCount(scaled(fans.length)) },
     { id: 'multiSystem', label: 'Fans in 2+ systems', value: fmtPct(m.multiSystemShare) },
     { id: 'valueMultiple', label: 'Annual value, multi-system vs. single-system fans', value: fmtMultiple(m.valueMultiple), size: 'large' },
-    { id: 'anonFnb', label: 'F&B transactions with no person attached', value: fmtPct(1 - m.fnbIdentifiedShare) },
+    { id: 'anonFnb', label: 'F&B transactions with no person attached', value: anonShown },
     { id: 'dupContacts', label: 'Duplicate contacts removed from the marketing list', value: fmtCount(scaled(m.duplicateEmails)),
       note: `${fmtPct(m.dupContactShare)} of ${fmtCount(scaled(m.listEmails))} emails` },
   ];
@@ -83,13 +87,12 @@ function fan360View(world, linkage, fans) {
     id: 'overlap', type: 'bar', indexAxis: 'y', title: 'Where each resolved fan appears',
     labels: combos.map(([l]) => l),
     series: [{ name: 'Fans', data: combos.map(([, k]) => scaled(comboCount[k])) }],
-    highlightIndex: combos.length - 1,
   };
   const valueBySystems = {
-    id: 'valueBySystems', type: 'bar', title: 'Average annual known spend per fan, by systems the fan appears in',
-    labels: ['1 system', '2 systems', '3 systems'],
+    id: 'valueBySystems', type: 'bar', title: 'Average annual known spend per fan: one system vs. two or more',
+    labels: ['1 system', '2+ systems'],
     series: [{ name: 'Annual value per fan', data: valueData }],
-    highlightIndex: 2,
+    highlightIndex: 1,
   };
 
   const takeaways = {

@@ -110,6 +110,45 @@ test('consent joins normalized contacts', () => {
   assert.ok(M.fans.some((f) => f.dnc));
 });
 
+test('value chart: 1 vs 2+ systems, highlight on the max, takeaway matches', () => {
+  const c = M.views.fan360.valueBySystems;
+  assert.deepEqual(c.labels, ['1 system', '2+ systems']);
+  const d = c.series[0].data;
+  assert.equal(d[c.highlightIndex], Math.max(...d));
+  assert.ok(Math.abs(d[1] / d[0] - m.valueMultiple) < 0.02);
+  assert.ok(M.views.fan360.takeaways.valueBySystems.includes(fmtMultiple(m.valueMultiple)));
+});
+
+test('every highlighted bar is the largest value in its series', () => {
+  const charts = [...['ticketing', 'fnb', 'groups'].flatMap((v) => M.views[v].charts),
+    M.views.fan360.overlap, M.views.fan360.valueBySystems];
+  for (const c of charts) {
+    if (c.type !== 'bar' || c.highlightIndex === undefined) continue;
+    const d = c.series[0].data;
+    assert.equal(d[c.highlightIndex], Math.max(...d), c.id);
+  }
+});
+
+test('F&B identified (tab 2) and anonymous (tab 4) shares add to 100 on screen', () => {
+  const id = M.views.fnb.kpis.find((k) => k.id === 'identifiedShare').value;
+  const anon = M.views.fan360.kpis.find((k) => k.id === 'anonFnb').value;
+  assert.equal(Math.round((parseFloat(id) + parseFloat(anon)) * 10), 1000, `${id} + ${anon}`);
+  for (const s of [id, anon]) assert.ok(!['96%', '9%', '22%'].includes(s), s);
+});
+
+test('dup contacts count only real fans', () => {
+  const fanEmails = new Set(M.fans.flatMap((f) => f.emails));
+  const fansWithListEmail = new Set();
+  const byEmail = new Map();
+  for (const f of M.fans) for (const e of f.emails) byEmail.set(e, f.fanId);
+  const W = M.world;
+  const list = new Set([...W.ticketing.map((t) => t.email), ...W.fnbIdentified.map((t) => t.email),
+    ...W.groups.flatMap((g) => [g.organizer.email, ...g.knownAttendees.map((k) => k.email)])]
+    .filter(Boolean).map((e) => e.trim().toLowerCase()));
+  for (const e of list) if (fanEmails.has(e)) fansWithListEmail.add(byEmail.get(e));
+  assert.equal(m.duplicateEmails, list.size - fansWithListEmail.size);
+});
+
 test('recommendations placeholder', () => {
   assert.deepEqual(M.recommendations, []);
 });
