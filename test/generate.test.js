@@ -50,3 +50,9 @@ test('no Math.random in src', () => {
     if (f.endsWith('.js')) assert.ok(!fs.readFileSync(path.join(dir, f), 'utf8').includes('Math.random'));
   }
 });
+
+test('H2 own scans use one seat area', () => {
+  const own = W.scans.filter((s) => s.pid === W.heroes.H2 && !s.viaTransfer && !s.bookingId);
+  assert.ok(own.length > 0);
+  assert.deepEqual([...new Set(own.map((s) => s.seatArea))], ['Main Level']);
+});

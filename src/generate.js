@@ -428,8 +428,9 @@ function planPerson(rand, p, s) {
 const HERO_PLANS = {
   H1: { 2024: { plan: 'triple_play', own: 3, spend: 129 }, 2025: { plan: 'twins_pass', own: 31, spend: 199 },
     2026: { plan: 'twins_pass', own: 38, spend: 229 } },
-  H2: { 2024: { plan: 'season_pre', own: 41, spend: 4200, xfer: 6 }, 2025: { plan: 'reserved', own: 44, spend: 5150, xfer: 5 },
-    2026: { plan: 'reserved', own: 12, spend: 5150, xfer: 26 } },
+  H2: { 2024: { plan: 'season_pre', own: 41, spend: 4200, xfer: 6, seat: 'Main Level' },
+    2025: { plan: 'reserved', own: 44, spend: 5150, xfer: 5, seat: 'Main Level' },
+    2026: { plan: 'reserved', own: 12, spend: 5150, xfer: 26, seat: 'Main Level' } },
   H3: { 2024: null, 2025: null, 2026: null },
   H4: { 2024: { plan: 'single', own: 1, spend: 64 }, 2025: { plan: 'single', own: 2, spend: 118 },
     2026: { plan: 'triple_play', own: 3, spend: 126 } },
@@ -481,7 +482,7 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
   });
   const plans = people.map((p, i) => (p.heroId ? HERO_PLANS[p.heroId] : planPerson(rand, p, st[i])));
   if (people[heroIdx.H1]) st[heroIdx.H1].power = true;
-  if (people[heroIdx.H2]) { st[heroIdx.H2].seat = 'Main Level'; st[heroIdx.H2].slipping = true; }
+  if (people[heroIdx.H2]) st[heroIdx.H2].slipping = true;
 
   // ---- ticketing accounts ----
   const ticketing = [];
