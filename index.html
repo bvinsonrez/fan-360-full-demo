@@ -3473,9 +3473,9 @@ function fanProfileView(fan, role, world) {
       : { group, label, value: String(value), restricted: false });
 
   const fields = [
-    field('Contact', 'Email', fan.emails.join(', ') || 'None on file'),
-    field('Contact', 'Phone', fan.phones.join(', ') || 'None on file'),
-    field('Contact', 'ZIP', fan.zip),
+    field('Contact', 'Email', fan.emails.join(', ') || 'None on file', true),
+    field('Contact', 'Phone', fan.phones.join(', ') || 'None on file', true),
+    field('Contact', 'ZIP', fan.zip, true),
     field('Contact', 'Region', fan.region),
   ];
   for (const yr of SEASONS) {

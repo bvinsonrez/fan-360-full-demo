@@ -32,6 +32,21 @@ test('role switch masks without changing fan', () => {
   assert.equal(p.header.roleLabel, 'Privacy & Data Governance');
 });
 
+test('contact PII is masked for sales and shown for privacy', () => {
+  for (const id of ['H1', 'H2', 'H3', 'H4']) {
+    const f = hero(id);
+    const s = fanProfileView(f, 'sales', M.world), p = fanProfileView(f, 'privacy', M.world);
+    for (const label of ['Email', 'Phone', 'ZIP']) {
+      const sf = s.fields.find((x) => x.group === 'Contact' && x.label === label);
+      const pf = p.fields.find((x) => x.group === 'Contact' && x.label === label);
+      assert.equal(sf.restricted, true, `${id} ${label} sales`);
+      assert.equal(sf.value, 'Restricted');
+      assert.equal(pf.restricted, false, `${id} ${label} privacy`);
+    }
+    assert.ok(!JSON.stringify(s).includes('@'), `${id}: no email anywhere in sales view`);
+  }
+});
+
 test('kids club household line by role', () => {
   const h4 = hero('H4');
   assert.equal(h4.kidsClubChildren.length, 2);
