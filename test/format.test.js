@@ -62,3 +62,33 @@ test('config channel rates avoid reserved percentages', () => {
   }
   assert.equal(config.CHANNELS.find((c) => c.id === 'sms').note, 'Requires documented consent, not just a preference flag.');
 });
+test('fmtCount keeps 3 significant figures across 10/100 rounding', () => {
+  assert.equal(fmtCount(9995), '10.0K');
+  assert.equal(fmtCount(99950), '100K');
+  assert.equal(fmtCount(99999), '100K');
+  assert.equal(fmtCount(9995000), '10.0M');
+  assert.equal(fmtCount(99950000), '100M');
+  assert.equal(fmtCount(999500000), '1.00B');
+  assert.equal(fmtCount(1e9), '1.00B');
+});
+test('fmtMoney keeps 3 significant figures across 10/100 rounding', () => {
+  assert.equal(fmtMoney(9995), '$10.0K');
+  assert.equal(fmtMoney(99950), '$100K');
+  assert.equal(fmtMoney(99999), '$100K');
+  assert.equal(fmtMoney(9995000), '$10.0M');
+  assert.equal(fmtMoney(99950000), '$100M');
+});
+test('roundParts total promotion stays readable and adds up', () => {
+  const cases = [
+    [[600, 500, 400], ['0.6K', '0.5K', '0.4K'], '1.5K'],
+    [[999.6, 2], ['1K', '0'], '1K'],
+    [[99960, 10], ['100K', '0'], '100K'],
+    [[999999, 1], ['1M', '0'], '1M'],
+  ];
+  for (const [input, labels, totalLabel] of cases) {
+    const r = roundParts(input);
+    assert.deepEqual(r.labels, labels, JSON.stringify(input));
+    assert.equal(r.totalLabel, totalLabel, JSON.stringify(input));
+    assert.equal(r.total, r.parts.reduce((a, b) => a + b, 0));
+  }
+});
