@@ -4,7 +4,7 @@ const { CHANNELS, PLANS, REGIONS } = require('../config');
 const { scaled, fmtCount, fmtPct, fmtMoney } = require('../format');
 const {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
-  createSegmentState, setFilter,
+  createSegmentState, setFilter, STEP_ROW_LABELS,
 } = require('../segments');
 const { EMPTY_TEXT } = require('./charts');
 
@@ -77,8 +77,8 @@ function describeFilters(f) {
 
 function assumptionText(ch) {
   const pct = (r) => fmtPct(r, Math.abs(r * 100 - Math.round(r * 100)) > 1e-9 ? 1 : 0);
-  const rates = Object.keys(ch.rates).map((k) => `${k} ${pct(ch.rates[k])}`).join(', ');
-  return `Assumptions, share of eligible fans: ${rates}. Average order value ${fmtMoney(ch.aov)}.`;
+  const rates = Object.keys(ch.rates).map((k) => `${STEP_ROW_LABELS[k]} ${pct(ch.rates[k])}`).join(', ');
+  return `Assumptions, share of eligible fans: ${rates}, average order ${fmtMoney(ch.aov)}.`;
 }
 
 // Runs one channel through consent and projection; strings come straight from segments.js.
@@ -111,14 +111,9 @@ function renderWaterfall(parent, r, empty) {
     const li = node('li', 'parts-item');
     li.appendChild(node('span', `parts-swatch ${i === 0 ? 'wf-eligible' : 'wf-removed'}`));
     li.appendChild(node('span', 'parts-name', i === 0 ? name : `Removed: ${name}`));
-    li.appendChild(node('span', 'parts-value', w.display.labels[i]));
+    li.appendChild(node('span', i === 0 ? 'parts-value wf-eligible-value' : 'parts-value', i === 0 ? fmtCount(scaled(w.eligible)) : w.display.labels[i]));
     list.appendChild(li);
   });
-  const total = node('li', 'parts-item parts-total');
-  total.appendChild(node('span', 'parts-swatch parts-swatch-none'));
-  total.appendChild(node('span', 'parts-name', 'Matched audience'));
-  total.appendChild(node('span', 'parts-value', w.display.totalLabel));
-  list.appendChild(total);
   parent.appendChild(list);
 }
 

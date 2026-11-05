@@ -109,6 +109,12 @@ test('every card opens in the builder with identical size and eligible strings, 
     renderSegments(seg, ctx);
     assert.equal(find(seg, 'seg-count')[0].textContent, fmtCount(scaled(card.matched)));
     assert.equal(find(seg, 'seg-eligible-email')[0].textContent, fmtCount(scaled(card.eligible)));
+    const sizeStr = fmtCount(scaled(card.matched)), eligStr = fmtCount(scaled(card.eligible));
+    assert.equal(find(seg, 'seg-count').length, 1);
+    assert.equal(find(seg, 'seg-eligible').length, 1);
+    assert.equal(find(seg, 'wf-eligible-value').length, 1);
+    assert.equal(find(seg, 'wf-eligible-value')[0].textContent, eligStr);
+    assert.ok(!seg.textContent.includes('Matched audience'));
     assert.ok(seg.textContent.includes(`From recommendation: ${card.name}`));
     assert.ok(find(seg, 'filter-chip').length > 0);
     // Edit a filter: banner goes away.
@@ -152,7 +158,7 @@ test('multi-channel, SMS note, duplicate label, assumptions and save segment', (
   const text = seg.textContent;
   assert.ok(text.includes('Requires documented consent'));
   assert.ok(text.includes('Duplicate contacts (already merged by linkage)'));
-  assert.ok(text.includes('Average order value $84'));
+  assert.ok(text.includes('average order $84') && text.includes('Purchases 3%'));
   assert.ok(text.includes('Combined revenue'));
   assert.ok(!/NaN|Infinity|undefined/.test(text));
   const save = find(seg, 'btn').find((b) => b.textContent === 'Save segment');
@@ -160,4 +166,15 @@ test('multi-channel, SMS note, duplicate label, assumptions and save segment', (
   assert.equal(state.savedSegments.length, 1);
   assert.equal(typeof state.savedSegments[0].matched, 'number');
   assert.ok(seg.textContent.includes('Saved segments'));
+});
+
+test('waterfall eligible equals pinned eligible for every selected channel', () => {
+  const state = fresh();
+  const seg = makeNode('div');
+  renderSegments(seg, ctxFor(state));
+  for (const id of ['sms', 'push', 'social']) withAttr(seg, 'data-channel', id)[0].listeners.click();
+  const pinned = find(seg, 'seg-eligible').map((n) => n.textContent);
+  const wf = find(seg, 'wf-eligible-value').map((n) => n.textContent);
+  assert.equal(pinned.length, 4);
+  assert.deepEqual(wf, pinned);
 });

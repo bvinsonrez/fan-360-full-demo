@@ -146,5 +146,5 @@ function setFilter(state, key, value) {
 
 module.exports = {
   DEFAULT_FILTERS, applyFilters, consentWaterfall, projectResults, projectionDisplay,
-  createSegmentState, applyRecommendation, setFilter,
+  createSegmentState, applyRecommendation, setFilter, STEP_ROW_LABELS,
 };
