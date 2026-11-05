@@ -1,6 +1,6 @@
 // Collects every string the UI shows for metrics, so tests can scan them.
 const { CHANNELS, SCALE } = require('./config');
-const { scaled, fmtCount, fmtMoney } = require('./format');
+const { scaled, fmtCount, fmtMoney, fmtChartValue } = require('./format');
 const { applyFilters, consentWaterfall, projectResults, projectionDisplay } = require('./segments');
 const { fanProfileView, ROLES } = require('./views-profile');
 
@@ -8,25 +8,36 @@ const CHANNEL_IDS = CHANNELS.map((c) => c.id);
 
 function addChart(out, c) {
   out.push(c.title, ...c.labels.map(String));
-  for (const s of c.series) out.push(s.name);
+  for (const s of c.series) {
+    out.push(s.name);
+    for (const v of s.data) if (v !== null) out.push(fmtChartValue(v, c.unit));
+  }
+}
+
+function addEvidenceChart(out, c, unit) {
+  out.push(...c.labels);
+  for (const row of c.series) for (const v of row) out.push(fmtChartValue(v, unit));
 }
 
 function addWaterfall(out, w) {
   out.push(...w.display.labels, w.display.totalLabel, ...w.steps.map((s) => s.label));
 }
 
+// Known-optional fields are skipped when absent; everything else is pushed as-is.
+const optional = (out, ...vals) => { for (const v of vals) if (v !== undefined && v !== null) out.push(v); };
+
 function collectDisplayedStrings(model) {
   const out = [];
   const { views, fans, world, recommendations } = model;
 
   for (const v of [views.ticketing, views.fnb, views.groups]) {
-    out.push(v.intro, v.cantTell);
+    optional(out, v.intro, v.cantTell);
     for (const k of v.kpis) out.push(k.label, k.value);
     for (const c of v.charts) addChart(out, c);
   }
 
   const f = views.fan360;
-  for (const k of f.kpis) { out.push(k.label, k.value); if (k.note) out.push(k.note); }
+  for (const k of f.kpis) { out.push(k.label, k.value); optional(out, k.note); }
   out.push(...f.funnel.labels, f.funnel.totalLabel, ...f.funnel.names);
   out.push(...f.matchBreakdown.labels, f.matchBreakdown.totalLabel, ...f.matchBreakdown.names);
   addChart(out, f.overlap);
@@ -40,14 +51,17 @@ function collectDisplayedStrings(model) {
       card.name, card.ruleText, card.valueAssumption, card.whyNow,
       fmtCount(scaled(card.matched)), fmtCount(scaled(card.eligible)), fmtMoney(card.projectedValue),
       card.evidence.label, card.evidence.baselineLabel, card.evidence.segmentValue, card.evidence.baselineValue,
-      ...card.evidence.chart.labels,
     );
+    addEvidenceChart(out, card.evidence.chart, card.evidence.chart.unit);
     if (card.sponsorAudience) out.push(card.sponsorAudience);
     const audience = applyFilters(fans, card.filters);
-    for (const id of CHANNEL_IDS) addWaterfall(out, consentWaterfall(audience, id));
-    const disp = projectionDisplay(projectResults(card.eligible, CHANNEL_IDS));
-    for (const c of disp.perChannel) { out.push(c.label); for (const r of c.rows) out.push(r.label, r.value); }
-    for (const r of disp.combined) out.push(r.label, r.value);
+    for (const id of CHANNEL_IDS) {
+      const w = consentWaterfall(audience, id);
+      addWaterfall(out, w);
+      const disp = projectionDisplay(projectResults(w.eligible, [id]));
+      for (const c of disp.perChannel) { out.push(c.label); for (const r of c.rows) out.push(r.label, r.value); }
+      for (const r of disp.combined) out.push(r.label, r.value);
+    }
   }
 
   for (const hero of fans.filter((x) => x.heroId)) {
@@ -59,7 +73,7 @@ function collectDisplayedStrings(model) {
       for (const lane of p.swimlanes) for (const e of lane.events) out.push(e.label);
     }
   }
-  return out.filter((s) => typeof s === 'string');
+  return out;
 }
 
 module.exports = { collectDisplayedStrings };

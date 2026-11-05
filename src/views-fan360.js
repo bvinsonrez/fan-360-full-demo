@@ -84,12 +84,12 @@ function fan360View(world, linkage, fans) {
   ];
 
   const overlap = {
-    id: 'overlap', type: 'bar', indexAxis: 'y', title: 'Where each resolved fan appears',
+    id: 'overlap', type: 'bar', unit: 'count', indexAxis: 'y', title: 'Where each resolved fan appears',
     labels: combos.map(([l]) => l),
     series: [{ name: 'Fans', data: combos.map(([, k]) => scaled(comboCount[k])) }],
   };
   const valueBySystems = {
-    id: 'valueBySystems', type: 'bar', title: 'Average annual known spend per fan: one system vs. two or more',
+    id: 'valueBySystems', type: 'bar', unit: 'money', title: 'Average annual known spend per fan: one system vs. two or more',
     labels: ['1 system', '2+ systems'],
     series: [{ name: 'Annual value per fan', data: valueData }],
     highlightIndex: 1,

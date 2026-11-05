@@ -76,32 +76,32 @@ const EVIDENCE = {
   pass_power(seg, all) {
     const base = all.filter((f) => f.plans[2026] === 'twins_pass');
     const s = avg(seg.map((f) => f.games[2026])), b = avg(base.map((f) => f.games[2026]));
-    return { label: 'Average 2026 games attended (vs all Twins Pass holders)', baselineLabel: 'All Twins Pass holders', s, b, fmt: (v) => `${round1(v).toFixed(1)} games` };
+    return { label: 'Average 2026 games attended (vs all Twins Pass holders)', baselineLabel: 'All Twins Pass holders', unit: 'number', s, b, fmt: (v) => `${round1(v).toFixed(1)} games` };
   },
   slipping_members(seg, all) {
     const base = all.filter((f) => ['choice', 'reserved', 'starter'].includes(f.plans[2026]) && f.attendanceChangePct !== null);
     const s = avg(seg.map((f) => f.attendanceChangePct)), b = avg(base.map((f) => f.attendanceChangePct));
-    return { label: 'Average change in attendance, 2025 to 2026 (vs all MyTwins Members)', baselineLabel: 'All MyTwins Members', s, b, fmt: (v) => fmtPct(v / 100) };
+    return { label: 'Average change in attendance, 2025 to 2026 (vs all MyTwins Members)', baselineLabel: 'All MyTwins Members', unit: 'pct', scale: 0.01, s, b, fmt: (v) => fmtPct(v / 100) };
   },
   group_only(seg, all) {
     const s = avg(seg.map((f) => f.groupOutings)), b = avg(all.filter((f) => f.groupOutings > 0).map((f) => f.groupOutings));
-    return { label: 'Average group outings (vs all fans with a group outing)', baselineLabel: 'All fans with a group outing', s, b, fmt: (v) => round1(v).toFixed(1) };
+    return { label: 'Average group outings (vs all fans with a group outing)', baselineLabel: 'All fans with a group outing', unit: 'number', s, b, fmt: (v) => round1(v).toFixed(1) };
   },
   lapsed_single_merch(seg, all) {
     const base = all.filter((f) => f.singleGameBefore2026);
     const past = (f) => f.games[2024] + f.games[2025];
     const s = avg(seg.map(past)), b = avg(base.map(past));
-    return { label: 'Average games attended in 2024 and 2025 (vs all 2024-25 single-game buyers)', baselineLabel: 'All 2024-25 single-game buyers', s, b, fmt: (v) => `${round1(v).toFixed(1)} games` };
+    return { label: 'Average games attended in 2024 and 2025 (vs all 2024-25 single-game buyers)', baselineLabel: 'All 2024-25 single-game buyers', unit: 'number', s, b, fmt: (v) => `${round1(v).toFixed(1)} games` };
   },
   kids_families(seg, all) {
     const tp = (f) => f.plans[2026] === 'triple_play';
     const s = share(seg, tp), b = share(all, tp);
-    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all fans)', baselineLabel: 'Everyone', s, b, fmt: (v) => fmtPct(v) };
+    return { label: 'Share who bought a Triple Play Bundle in 2026 (vs all fans)', baselineLabel: 'Everyone', unit: 'pct', s, b, fmt: (v) => fmtPct(v) };
   },
   premium_curious(seg, all) {
     const spenders = all.filter((f) => f.fnbPercentile2026 !== null);
     const s = avg(seg.map((f) => f.fnbPercentile2026)), b = avg(spenders.map((f) => f.fnbPercentile2026));
-    return { label: 'Average F&B spend percentile, 2026 (vs all F&B buyers)', baselineLabel: 'All F&B buyers', s, b, fmt: (v) => ordinal(Math.round(v)) + ' percentile' };
+    return { label: 'Average F&B spend percentile, 2026 (vs all F&B buyers)', baselineLabel: 'All F&B buyers', unit: 'number', s, b, fmt: (v) => ordinal(Math.round(v)) + ' percentile' };
   },
 };
 
@@ -117,7 +117,7 @@ function computeRecommendations(fans) {
       valueAssumption: r.valueAssumption,
       evidence: {
         label: e.label, baselineLabel: e.baselineLabel, segmentValue: e.fmt(e.s), baselineValue: e.fmt(e.b),
-        chart: { labels: ['This segment', e.baselineLabel], series: [[Math.round(e.s * 100) / 100, Math.round(e.b * 100) / 100]] },
+        chart: { labels: ['This segment', e.baselineLabel], series: [[Math.round(e.s * (e.scale || 1) * 1e4) / 1e4, Math.round(e.b * (e.scale || 1) * 1e4) / 1e4]], unit: e.unit },
       },
       whyNow: r.whyNow, heroId: r.heroId,
       sponsorAudience: r.sponsor ? r.sponsor.label : null,

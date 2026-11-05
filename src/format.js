@@ -55,6 +55,18 @@ function fmtMultiple(x) {
   return roundTo(x, 1).toFixed(1) + 'x';
 }
 
+// One formatter for every chart axis tick, tooltip and data label.
+function fmtChartValue(value, unit) {
+  if (unit === 'count') return fmtCount(value);
+  if (unit === 'money') return fmtMoney(value);
+  if (unit === 'pct') return fmtPct(value, Math.abs(value) > 0 && Math.abs(value) < 0.1 ? 1 : 0);
+  if (unit === 'number') {
+    const r = roundTo(value, 1);
+    return r === 0 ? '0' : Number.isInteger(r) ? String(r) : r.toFixed(1);
+  }
+  throw new Error(`Unknown chart unit ${unit}`);
+}
+
 function unitFor(top) {
   const exp = top > 0 ? Math.floor(Math.log10(top)) : 0;
   return Math.max(1, Math.pow(10, exp - 2));
@@ -87,4 +99,4 @@ function roundParts(parts) {
   return { unit, parts: rounded, total, labels: rounded.map(label), totalLabel: label(total) };
 }
 
-module.exports = { scaled, fmtCount, fmtMoney, fmtPct, fmtMultiple, roundParts };
+module.exports = { scaled, fmtCount, fmtMoney, fmtPct, fmtMultiple, fmtChartValue, roundParts };

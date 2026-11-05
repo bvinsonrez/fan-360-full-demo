@@ -11,8 +11,18 @@ test('displayed strings are plentiful and well formed', () => {
   const shown = collectDisplayedStrings(model);
   assert.ok(shown.length > 100, `only ${shown.length} strings`);
   for (const s of shown) {
+    assert.equal(typeof s, 'string', `non-string item: ${s}`);
     assert.ok(!/NaN|undefined|Infinity|-0(?![.\d])/.test(s), `bad string: ${s}`);
   }
+});
+
+test('every chart in the model has a valid unit', () => {
+  const units = ['count', 'money', 'pct', 'number'];
+  const charts = [...['ticketing', 'fnb', 'groups'].flatMap((v) => model.views[v].charts),
+    model.views.fan360.overlap, model.views.fan360.valueBySystems,
+    ...model.recommendations.map((c) => c.evidence.chart)];
+  assert.ok(charts.length >= 15);
+  for (const c of charts) assert.ok(units.includes(c.unit), String(c.id || c.labels));
 });
 
 test('no reserved figure is displayed', { skip: !file && 'RESERVED_FIGURES_FILE not set' }, () => {
