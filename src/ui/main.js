@@ -4,6 +4,8 @@ const { buildModel } = require('../model');
 const { createSegmentState } = require('../segments');
 const { destroyAllCharts } = require('./charts');
 const { renderSystemTab } = require('./tab-systems');
+const { renderFan360 } = require('./tab-fan360');
+const { renderProfile } = require('./tab-profile');
 
 const TAB_GROUPS = [
   { label: 'Your systems today', tabs: [
@@ -28,6 +30,8 @@ const TABS = {
   ticketing: (c, ctx) => renderSystemTab(c, ctx.model.views.ticketing),
   fnb: (c, ctx) => renderSystemTab(c, ctx.model.views.fnb),
   groups: (c, ctx) => renderSystemTab(c, ctx.model.views.groups),
+  fan360: (c, ctx) => renderFan360(c, ctx.model.views.fan360),
+  profile: (c, ctx) => renderProfile(c, ctx),
 };
 
 function registerTab(id, renderer) { TABS[id] = renderer; }

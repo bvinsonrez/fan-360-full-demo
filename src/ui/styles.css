@@ -48,3 +48,57 @@ body {
   .kpis { flex-wrap: wrap; }
   .kpi { flex: 1 1 140px; }
 }
+
+/* Tab 4 */
+.kpis-hero { align-items: stretch; }
+.kpi-large { flex: 1.6 1 0; background: var(--navy); border-color: var(--navy); }
+.kpi-large .kpi-value { font-size: 40px; color: var(--white); }
+.kpi-large .kpi-label { color: var(--white); font-size: 13px; }
+.kpi-note { font-size: 12px; color: var(--slate); }
+.parts-bar { display: flex; height: 26px; border-radius: 4px; overflow: hidden; margin: 6px 0 8px; gap: 2px; }
+.parts-seg { min-width: 4px; }
+.parts-seg-0 { background: var(--navy); }
+.parts-seg-1 { background: #4F6F9A; }
+.parts-seg-2 { background: var(--grey); }
+.parts-list { list-style: none; margin: 0 0 6px; padding: 0; }
+.parts-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; font-size: 14px; }
+.parts-swatch { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+.parts-swatch-none { background: none; }
+.parts-name { flex: 1 1 auto; }
+.parts-value { font-weight: 700; color: var(--navy); }
+.parts-total { border-top: 1px solid var(--grey-light); margin-top: 2px; padding-top: 4px; font-weight: 600; }
+.takeaway { margin: 6px 0 2px; font-size: 14px; color: var(--ink); border-left: 3px solid var(--navy); padding-left: 8px; }
+
+/* Tab 5 */
+.pf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pf-bar-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--slate); }
+.chips { display: flex; gap: 6px; }
+.chip-btn, .role-btn, .result-btn { font: inherit; font-weight: 600; color: var(--navy); background: var(--white); border: 1px solid var(--grey-light); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.chip-btn[aria-pressed="true"], .role-btn[aria-pressed="true"], .result-btn[aria-pressed="true"] { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.pf-search { font: inherit; flex: 1 1 220px; min-width: 200px; max-width: 340px; padding: 5px 10px; border: 1px solid var(--grey); border-radius: 6px; }
+.role-toggle { display: flex; gap: 4px; margin-left: auto; }
+.pf-results { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; max-height: 76px; overflow-y: auto; }
+.result-btn { font-weight: 500; padding: 2px 10px; }
+.pf-none { color: var(--slate); }
+.pf-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 8px; }
+.pf-name { margin: 0; font-size: 22px; color: var(--navy); }
+.pf-meta { color: var(--slate); }
+.pf-role { margin-left: auto; font-weight: 600; }
+.pf-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+.pf-col { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.pf-group { background: var(--white); border: 1px solid var(--grey-light); border-radius: 6px; padding: 6px 12px 8px; }
+.pf-group-title { margin: 0 0 4px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--navy); }
+.pf-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid var(--surface); }
+.pf-label { color: var(--slate); }
+.pf-value { text-align: right; overflow-wrap: anywhere; }
+.pill-restricted { background: var(--grey-light); color: var(--slate); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 700; align-self: center; }
+.lanes { display: flex; flex-direction: column; gap: 4px; }
+.lane { display: grid; grid-template-columns: 112px 1fr; gap: 8px; align-items: stretch; }
+.lane-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.lane-name { font-weight: 600; font-size: 13px; color: var(--navy); align-self: center; }
+.lane-season { font-size: 12px; font-weight: 700; color: var(--slate); text-align: center; }
+.lane-cell { background: var(--surface); border-radius: 4px; min-height: 44px; padding: 3px; display: flex; flex-direction: column; gap: 3px; }
+.lane-event { font-size: 12px; background: var(--navy); color: var(--white); border-radius: 3px; padding: 1px 5px; }
+.lane-transfer { background: var(--grey); color: var(--ink); }
+.lane-group, .lane-experience { background: #4F6F9A; }
+@media (max-width: 900px) { .pf-cols { grid-template-columns: 1fr; } }
