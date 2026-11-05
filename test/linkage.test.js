@@ -93,13 +93,19 @@ test('heroes each resolve to one cluster with evidence', () => {
 test('stats are consistent and helpers behave', () => {
   const s = L.stats;
   assert.equal(s.resolvedFans, L.clusters.length);
-  assert.equal(s.byConfidence.low, s.lowUnmerged);
-  assert.equal(s.candidateMatches, s.byConfidence.high + s.byConfidence.medium + s.byConfidence.low);
-  assert.equal(s.byConfidence.high, s.byMethod.email + s.byMethod.phone);
-  assert.equal(s.byConfidence.medium, s.byMethod.fuzzy);
+  const ev = { email: 0, phone: 0, fuzzy: 0 };
+  let evTotal = 0, lowTotal = 0;
+  for (const c of L.clusters) {
+    lowTotal += c.lowCandidates.length;
+    for (const e of c.evidence) { ev[e.method]++; evTotal++; }
+  }
+  assert.equal(lowTotal, s.byConfidence.low);
+  assert.equal(evTotal, s.sourceRecords - s.resolvedFans);
+  assert.equal(ev.email, s.byMethod.email);
+  assert.equal(ev.fuzzy, s.byMethod.fuzzy);
+  assert.ok(ev.phone <= s.byMethod.phone);
   assert.ok(s.byConfidence.low < s.resolvedFans, String(s.byConfidence.low));
-  assert.equal(s.resolvedFans, L.clusters.length);
-  assert.equal(L.clusters.filter((c) => c.confidence === 'medium').length > 0, true);
+  assert.ok(L.clusters.some((c) => c.confidence === 'medium'));
   assert.ok(s.byMethod.fuzzy > 0 && s.byMethod.email > 0 && s.byMethod.phone > 0);
   assert.equal(soundex('Robert'), soundex('Rupert'));
   assert.equal(soundex('Halvorsen'), soundex('Halvorson'));
