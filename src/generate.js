@@ -30,7 +30,11 @@ const TUNE = {
   dupAccount: 0.38, // per active season, non-plan buyers checking out on a new account
   nameMess: 0.05, oldPhone: 0.05, missingPhone: 0.1,
   groupBookings: { 2024: 290, 2025: 280, 2026: 268 },
-  experiences: { 2024: 165, 2025: 175, 2026: 185 },
+  experiences: { 2024: 110, 2025: 115, 2026: 120 },
+  // Experience buyer mix by archetype (order: member, premium_curious, family, single, triple_play, pass).
+  expBuyers: [0.15, 0.2, 0.25, 0.25, 0.1, 0.05],
+  // Chance a group organizer comes from ticket buyers rather than group-only fans.
+  organizerFromBuyers: { corporate: 0.5, other: 0.15 },
   surveyRate: 0.06,
 };
 
@@ -638,6 +642,7 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
 
   // ---- groups ----
   const groups = [];
+  const organizers = new Set();
   let bkN = 0;
   const groupOnly = people.map((p, i) => i).filter((i) => people[i].archetype === 'group_only' && !people[i].heroId);
   const slots = [];
@@ -662,6 +667,7 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
     const price = premium ? 95 + rand() * 60 : 26 + rand() * 24;
     const bookingId = `G${pad(++bkN, 5)}`;
     const oc = contact(organizerIdx, 'groups', orgKey);
+    organizers.add(organizerIdx);
     const known = [];
     const seen = new Set([organizerIdx]);
     for (const k of knownIdx) {
@@ -691,7 +697,7 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
     for (let b = 0; b < TUNE.groupBookings[yr]; b++) {
       const type = pick(rand, GROUP_TYPES, [0.25, 0.22, 0.15, 0.12, 0.1, 0.16]);
       let org;
-      if (sp >= slots.length || rand() < (type === 'Corporate' ? 0.9 : 0.15)) org = organizerPool[Math.floor(rand() * organizerPool.length)];
+      if (sp >= slots.length || rand() < (type === 'Corporate' ? TUNE.organizerFromBuyers.corporate : TUNE.organizerFromBuyers.other)) org = organizerPool[Math.floor(rand() * organizerPool.length)];
       else org = slots[sp++];
       const nKnown = pick(rand, [0, 1, 2, 3, 4, 5], [0.2, 0.25, 0.22, 0.15, 0.1, 0.08]);
       const known = [];
@@ -739,7 +745,7 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
   for (const yr of SEASONS) {
     for (let e = 0; e < TUNE.experiences[yr]; e++) {
       const kind = pick(rand, ['tour', 'suite', 'legends_landing'], [0.55, 0.25, 0.2]);
-      const a = pick(rand, expBuyerArch, [0.4, 0.2, 0.15, 0.13, 0.07, 0.05]);
+      const a = pick(rand, expBuyerArch, TUNE.expBuyers);
       if (!byArch[a].length) continue;
       const i = byArch[a][Math.floor(rand() * byArch[a].length)];
       const amount = kind === 'tour' ? intBetween(rand, 2, 6) * (rand() < 0.15 ? 95 : intBetween(rand, 22, 30))
@@ -776,7 +782,9 @@ function generateWorld({ seed = SEED, size = SAMPLE_SIZE } = {}) {
   // ---- surveys ----
   const surveys = [];
   let respN = 0;
-  const acctEmail = (i) => (primaryAcct[i] ? primaryAcct[i].email : contact(i, 'groups').email);
+  // Respondents without an account use the group contact they actually gave (organizer or attendee).
+  const acctEmail = (i) => (primaryAcct[i] ? primaryAcct[i].email
+    : contact(i, 'groups', organizers.has(i) ? 'groups' : 'groups_attendee').email);
   for (let i = 0; i < people.length; i++) {
     const p = people[i];
     if (p.isMinor) continue;
