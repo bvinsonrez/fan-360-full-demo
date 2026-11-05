@@ -289,6 +289,16 @@ const { fanProfileView, ROLES } = require('./views-profile');
 
 const CHANNEL_IDS = CHANNELS.map((c) => c.id);
 
+// Every channel subset of size 2 to 4 (11 for four channels), in stable order.
+function channelSubsets() {
+  const out = [];
+  for (let mask = 1; mask < (1 << CHANNEL_IDS.length); mask++) {
+    const ids = CHANNEL_IDS.filter((_, i) => mask & (1 << i));
+    if (ids.length >= 2) out.push(ids);
+  }
+  return out;
+}
+
 function addChart(out, c) {
   out.push(c.title, ...c.labels.map(String));
   for (const s of c.series) {
@@ -346,7 +356,7 @@ function collectDisplayedStrings(model) {
       for (const c of disp.perChannel) { out.push(c.label); for (const r of c.rows) out.push(r.label, r.value); }
       for (const r of disp.combined) out.push(r.label, r.value);
     }
-    for (const ids of [CHANNEL_IDS, ['email', 'sms']]) {
+    for (const ids of channelSubsets()) {
       const results = ids.map((id) => projectResults(consentWaterfall(audience, id).eligible, [id]));
       for (const r of combineProjections(results)) out.push(r.label, r.value);
     }
@@ -364,7 +374,7 @@ function collectDisplayedStrings(model) {
   return out;
 }
 
-module.exports = { collectDisplayedStrings };
+module.exports = { collectDisplayedStrings, channelSubsets };
 
 },
 "fans.js": function (module, exports, require) {

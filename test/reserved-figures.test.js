@@ -2,7 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const { buildModel } = require('../src/model');
-const { collectDisplayedStrings } = require('../src/display-metrics');
+const { collectDisplayedStrings, channelSubsets } = require('../src/display-metrics');
+const { applyFilters, consentWaterfall, projectResults, combineProjections } = require('../src/segments');
 
 const model = buildModel();
 const file = process.env.RESERVED_FIGURES_FILE;
@@ -13,6 +14,17 @@ test('displayed strings are plentiful and well formed', () => {
   for (const s of shown) {
     assert.equal(typeof s, 'string', `non-string item: ${s}`);
     assert.ok(!/NaN|undefined|Infinity|-0(?![.\d])/.test(s), `bad string: ${s}`);
+  }
+});
+
+test('scan covers combined totals for every multi-channel subset', () => {
+  assert.equal(channelSubsets().length, 11);
+  const shown = new Set(collectDisplayedStrings(model));
+  const card = model.recommendations[0];
+  const aud = applyFilters(model.fans, card.filters);
+  const res = (ids) => ids.map((id) => projectResults(consentWaterfall(aud, id).eligible, [id]));
+  for (const ids of [['email', 'push'], ['sms', 'push', 'social'], ['email', 'sms']]) {
+    for (const r of combineProjections(res(ids))) assert.ok(shown.has(r.value), `${ids}: ${r.value}`);
   }
 });
 
