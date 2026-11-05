@@ -5,6 +5,7 @@ const { resolveIdentities } = require('./linkage');
 const { buildFans } = require('./fans');
 const { ticketingView, fnbView, groupsView } = require('./views-systems');
 const { fan360View } = require('./views-fan360');
+const { computeRecommendations } = require('./recommendations');
 
 function buildModel(cfg = config) {
   const world = generateWorld({ seed: cfg.SEED, size: cfg.SAMPLE_SIZE });
@@ -17,7 +18,7 @@ function buildModel(cfg = config) {
     groups: groupsView(world),
     fan360: fan360View(world, linkage, fans),
   };
-  return { world, linkage, fans, fanById, views, recommendations: [] };
+  return { world, linkage, fans, fanById, views, recommendations: computeRecommendations(fans) };
 }
 
 module.exports = { buildModel };

@@ -54,6 +54,16 @@ test('empty audience', () => {
   assert.equal(w.eligible, 0);
   assert.ok(JSON.stringify([w, r]).match(/NaN|Infinity/) === null);
   assert.equal(r.combined.revenue, 0);
+  const fin = (v, what) => assert.ok(Number.isFinite(v), `${what} not finite: ${v}`);
+  fin(w.start, 'start'); fin(w.eligible, 'eligible');
+  w.steps.forEach((s) => fin(s.removed, `removed ${s.id}`));
+  w.display.parts.forEach((v, i) => fin(v, `display part ${i}`));
+  fin(w.display.total, 'display total');
+  for (const c of r.perChannel) {
+    Object.entries(c.metrics).forEach(([k, v]) => fin(v, `metric ${c.channelId}.${k}`));
+    fin(c.revenue, `revenue ${c.channelId}`);
+  }
+  fin(r.combined.purchases, 'combined purchases'); fin(r.combined.revenue, 'combined revenue');
 });
 
 test('editing clears recommendation source', () => {

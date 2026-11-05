@@ -149,6 +149,6 @@ test('dup contacts count only real fans', () => {
   assert.equal(m.duplicateEmails, list.size - fansWithListEmail.size);
 });
 
-test('recommendations placeholder', () => {
-  assert.deepEqual(M.recommendations, []);
+test('model carries six recommendation cards', () => {
+  assert.equal(M.recommendations.length, 6);
 });
